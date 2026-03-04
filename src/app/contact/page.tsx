@@ -39,62 +39,9 @@ export default function ContactPage() {
         </a>
       </div>
 
-      <form className="space-y-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-2">
-            이름
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-            placeholder="이름을 입력해 주세요"
-          />
-        </div>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            이메일
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-            placeholder="이메일을 입력해 주세요"
-          />
-        </div>
-        <div>
-          <label htmlFor="subject" className="block text-sm font-medium mb-2">
-            제목
-          </label>
-          <input
-            type="text"
-            id="subject"
-            name="subject"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-            placeholder="문의 제목을 입력해 주세요"
-          />
-        </div>
-        <div>
-          <label htmlFor="message" className="block text-sm font-medium mb-2">
-            내용
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            rows={6}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all resize-y"
-            placeholder="문의 내용을 작성해 주세요"
-          />
-        </div>
-        <button
-          type="submit"
-          className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
-        >
-          문의 보내기
-        </button>
-      </form>
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl text-sm text-blue-800 dark:text-blue-300 mb-6">
+        <p>현재 문의는 이메일로만 접수하고 있습니다. 위 이메일 주소로 직접 연락해 주세요.</p>
+      </div>
     </div>
   );
 }

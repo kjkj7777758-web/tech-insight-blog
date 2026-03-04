@@ -1,6 +1,6 @@
 export const SITE_NAME = '테크인사이트';
 export const SITE_DESCRIPTION = 'IT 기술, 제품 리뷰, 프로그래밍 튜토리얼을 다루는 기술 블로그';
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tech-blog-rho-virid.vercel.app';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://techinsight-kr.vercel.app';
 export const AUTHOR_NAME = '테크인사이트 운영자';
 
 export const CATEGORIES = [

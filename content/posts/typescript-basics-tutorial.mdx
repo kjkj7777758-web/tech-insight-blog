@@ -1,0 +1,325 @@
+---
+title: "TypeScript 기초: JavaScript 개발자를 위한 타입스크립트 입문"
+description: "JavaScript 개발자가 TypeScript를 시작하기 위한 핵심 개념을 정리했습니다. 타입 시스템, 인터페이스, 제네릭 등을 실전 예제로 배워보세요."
+date: "2024-09-25"
+category: "튜토리얼"
+tags: ["TypeScript", "JavaScript", "프로그래밍", "웹개발"]
+thumbnail: "/images/posts/typescript.jpg"
+author: "테크인사이트 운영자"
+published: true
+featured: false
+---
+
+## TypeScript란 무엇인가
+
+TypeScript는 Microsoft에서 개발한 프로그래밍 언어로, JavaScript의 상위 집합(superset)입니다. 쉽게 말해 JavaScript에 타입 시스템을 추가한 언어입니다. 모든 JavaScript 코드는 유효한 TypeScript 코드이며, TypeScript는 컴파일 과정을 거쳐 일반 JavaScript로 변환됩니다.
+
+현재 대부분의 프론트엔드 프레임워크(React, Vue, Angular)와 백엔드 프레임워크(Next.js, NestJS)가 TypeScript를 기본 지원하고 있으며, 새로운 프로젝트의 대다수가 TypeScript를 채택하고 있습니다.
+
+## 왜 TypeScript를 사용해야 하는가
+
+### 컴파일 시점 오류 감지
+
+JavaScript는 런타임에 오류를 발견하지만, TypeScript는 코드를 작성하는 시점에 오류를 잡아줍니다.
+
+```typescript
+// JavaScript에서는 실행 시점에야 오류 발견
+function greet(name) {
+  return name.toUppercase(); // 오타! 런타임 에러
+}
+
+// TypeScript에서는 작성 시점에 오류 감지
+function greet(name: string): string {
+  return name.toUppercase(); // 편집기에서 바로 빨간 줄 표시
+}
+```
+
+### 향상된 IDE 지원
+
+타입 정보를 바탕으로 자동 완성, 리팩토링, 코드 네비게이션이 훨씬 정확해집니다. 대규모 프로젝트에서 이러한 이점은 개발 속도를 크게 향상시킵니다.
+
+### 코드 문서화 효과
+
+타입 선언 자체가 코드의 의도를 명확히 전달하는 문서 역할을 합니다. 함수의 매개변수와 반환값만 봐도 어떻게 사용해야 하는지 알 수 있습니다.
+
+## 환경 설정
+
+### Node.js 환경에서 설정
+
+```bash
+# TypeScript 설치
+npm install -D typescript
+
+# tsconfig.json 생성
+npx tsc --init
+```
+
+### tsconfig.json 기본 설정
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+`strict: true` 옵션을 활성화하면 가장 엄격한 타입 검사가 적용됩니다. 처음에는 번거로울 수 있지만, 장기적으로 코드 품질을 높여줍니다.
+
+## 기본 타입
+
+TypeScript의 기본 타입을 알아봅시다.
+
+```typescript
+// 기본 원시 타입
+let name: string = "홍길동";
+let age: number = 25;
+let isStudent: boolean = true;
+
+// 배열
+let numbers: number[] = [1, 2, 3, 4, 5];
+let names: Array<string> = ["철수", "영희", "민수"];
+
+// 튜플
+let user: [string, number] = ["홍길동", 25];
+
+// 열거형 (Enum)
+enum Direction {
+  Up = "UP",
+  Down = "DOWN",
+  Left = "LEFT",
+  Right = "RIGHT",
+}
+
+// any와 unknown
+let anything: any = "hello"; // 타입 검사 비활성화 (사용 지양)
+let uncertain: unknown = 42; // any보다 안전한 대안
+
+// void와 never
+function logMessage(msg: string): void {
+  console.log(msg);
+}
+
+function throwError(msg: string): never {
+  throw new Error(msg);
+}
+```
+
+## 인터페이스와 타입 별칭
+
+### 인터페이스
+
+인터페이스는 객체의 구조를 정의하는 데 사용됩니다.
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  age?: number; // 선택적 속성
+  readonly createdAt: Date; // 읽기 전용
+}
+
+function createUser(user: User): void {
+  console.log(`${user.name}님이 가입했습니다.`);
+}
+
+createUser({
+  id: 1,
+  name: "홍길동",
+  email: "hong@example.com",
+  createdAt: new Date(),
+});
+```
+
+### 타입 별칭
+
+`type` 키워드를 사용하여 타입에 이름을 부여할 수 있습니다.
+
+```typescript
+type ID = string | number;
+type Status = "pending" | "active" | "inactive";
+
+type Product = {
+  id: ID;
+  name: string;
+  price: number;
+  status: Status;
+};
+```
+
+### 인터페이스 vs 타입 별칭
+
+인터페이스는 확장(extends)이 가능하고 선언 병합을 지원합니다. 타입 별칭은 유니온 타입, 튜플 등 더 다양한 형태를 표현할 수 있습니다. 일반적으로 객체 구조 정의에는 인터페이스를, 그 외의 경우에는 타입 별칭을 사용하는 것이 관례입니다.
+
+## 제네릭
+
+제네릭은 타입을 매개변수처럼 사용하는 기능입니다. 재사용 가능한 컴포넌트를 만들 때 매우 유용합니다.
+
+```typescript
+// 제네릭 함수
+function getFirst<T>(arr: T[]): T | undefined {
+  return arr[0];
+}
+
+const firstNumber = getFirst<number>([1, 2, 3]); // number
+const firstString = getFirst(["a", "b", "c"]); // string (타입 추론)
+
+// 제네릭 인터페이스
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+}
+
+const response: ApiResponse<UserData> = {
+  data: { id: 1, name: "홍길동" },
+  status: 200,
+  message: "성공",
+};
+```
+
+### 제네릭 제약 조건
+
+`extends` 키워드를 사용하여 제네릭 타입에 제약을 걸 수 있습니다.
+
+```typescript
+interface HasLength {
+  length: number;
+}
+
+function logLength<T extends HasLength>(item: T): void {
+  console.log(item.length);
+}
+
+logLength("hello"); // 5
+logLength([1, 2, 3]); // 3
+logLength({ length: 10 }); // 10
+// logLength(123); // 오류! number에는 length가 없음
+```
+
+## 유니온 타입과 교차 타입
+
+```typescript
+// 유니온 타입: 여러 타입 중 하나
+function formatId(id: string | number): string {
+  if (typeof id === "string") {
+    return id.toUpperCase();
+  }
+  return id.toString();
+}
+
+// 교차 타입: 여러 타입을 결합
+interface Timestamped {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Authored {
+  author: string;
+}
+
+type BlogPost = Timestamped & Authored & {
+  title: string;
+  content: string;
+};
+```
+
+## 타입 가드
+
+타입 가드를 사용하면 조건부로 타입을 좁힐 수 있습니다.
+
+```typescript
+interface Cat {
+  type: "cat";
+  meow(): void;
+}
+
+interface Dog {
+  type: "dog";
+  bark(): void;
+}
+
+type Animal = Cat | Dog;
+
+function makeSound(animal: Animal): void {
+  if (animal.type === "cat") {
+    animal.meow(); // TypeScript가 Cat으로 인식
+  } else {
+    animal.bark(); // TypeScript가 Dog으로 인식
+  }
+}
+```
+
+## 유틸리티 타입
+
+TypeScript는 자주 사용되는 타입 변환을 위한 유틸리티 타입을 내장하고 있습니다.
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+}
+
+// Partial: 모든 속성을 선택적으로
+type UpdateUser = Partial<User>;
+
+// Pick: 특정 속성만 선택
+type UserProfile = Pick<User, "id" | "name" | "email">;
+
+// Omit: 특정 속성 제외
+type PublicUser = Omit<User, "password">;
+
+// Record: 키-값 쌍의 타입 정의
+type UserRoles = Record<string, "admin" | "user" | "guest">;
+```
+
+## React에서 TypeScript 활용
+
+```typescript
+interface ButtonProps {
+  label: string;
+  onClick: () => void;
+  variant?: "primary" | "secondary";
+  disabled?: boolean;
+}
+
+function Button({ label, onClick, variant = "primary", disabled = false }: ButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`btn btn-${variant}`}
+    >
+      {label}
+    </button>
+  );
+}
+```
+
+## 마이그레이션 팁
+
+기존 JavaScript 프로젝트를 TypeScript로 전환할 때의 팁입니다.
+
+1. **점진적 전환**: 한 번에 모든 파일을 변환하지 말고, 파일 단위로 `.js`를 `.ts`로 변경합니다.
+2. **strict 모드 점진적 적용**: 처음에는 `strict: false`로 시작하고, 점차 엄격한 옵션을 활성화합니다.
+3. **any 허용 후 점진적 개선**: 초기에는 `any`를 허용하고, 시간이 지나면서 구체적인 타입으로 교체합니다.
+4. **타입 선언 파일 활용**: 외부 라이브러리의 타입은 `@types/` 패키지를 통해 설치합니다.
+
+## 정리
+
+TypeScript는 JavaScript의 유연성을 유지하면서도 타입 안전성을 제공하는 강력한 도구입니다. 초기 학습 비용이 있지만, 프로젝트가 커질수록 그 가치를 실감하게 됩니다. 특히 팀 프로젝트에서 코드의 의도를 명확히 전달하고, 리팩토링 시 안정성을 보장하는 데 큰 도움이 됩니다.
+
+처음 시작할 때는 기본 타입과 인터페이스부터 익히고, 점차 제네릭과 고급 타입 기법으로 확장해 나가는 것을 추천합니다.

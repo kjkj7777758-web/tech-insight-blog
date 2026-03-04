@@ -1,0 +1,245 @@
+---
+title: "REST API 설계 베스트 프랙티스: 실무에서 자주 하는 실수와 해결법"
+description: "URL 네이밍, HTTP 메서드, 에러 처리, 페이지네이션 등 REST API 설계 시 알아야 할 핵심 원칙과 실무 팁을 정리합니다."
+date: "2026-03-03"
+category: "가이드"
+tags: ["API", "REST", "백엔드", "설계"]
+thumbnail: "/images/posts/api-design.jpg"
+author: "테크인사이트 운영자"
+published: true
+---
+
+## 좋은 API란 무엇인가
+
+좋은 API는 문서를 읽지 않아도 URL만 보고 어떤 동작을 하는지 직관적으로 알 수 있는 API입니다. 프론트엔드 개발자가 백엔드 개발자에게 매번 물어보지 않아도 되는 API가 좋은 API입니다.
+
+실무에서 흔히 발생하는 실수들을 짚어보면서, REST API 설계의 핵심 원칙을 정리하겠습니다.
+
+## URL 설계 원칙
+
+### 명사를 사용하세요 (동사 X)
+
+```
+# 나쁜 예
+GET /getUsers
+POST /createUser
+PUT /updateUser/123
+DELETE /deleteUser/123
+
+# 좋은 예
+GET /users
+POST /users
+PUT /users/123
+DELETE /users/123
+```
+
+리소스는 명사로 표현하고, 행동은 HTTP 메서드로 구분합니다.
+
+### 복수형을 사용하세요
+
+```
+# 나쁜 예
+GET /user/123
+
+# 좋은 예
+GET /users/123
+```
+
+컬렉션을 다루는 엔드포인트와 개별 리소스를 다루는 엔드포인트의 일관성을 위해 항상 복수형을 사용합니다.
+
+### 중첩은 2단계까지만
+
+```
+# 괜찮은 예
+GET /users/123/posts
+
+# 너무 깊은 예 (피해야 함)
+GET /users/123/posts/456/comments/789/likes
+```
+
+중첩이 깊어지면 URL이 복잡해지고, 서버 구현도 어려워집니다. 2단계를 넘으면 별도의 엔드포인트로 분리하세요.
+
+## HTTP 메서드 제대로 사용하기
+
+각 메서드에는 명확한 의미가 있습니다.
+
+- **GET**: 데이터 조회. 서버 상태를 변경하면 안 됩니다.
+- **POST**: 새 리소스 생성.
+- **PUT**: 리소스 전체 교체. 보내지 않은 필드는 기본값으로 초기화됩니다.
+- **PATCH**: 리소스 부분 수정. 보낸 필드만 변경됩니다.
+- **DELETE**: 리소스 삭제.
+
+실무에서 가장 흔한 실수는 PUT과 PATCH를 혼동하는 것입니다.
+
+```
+# PUT: 전체 교체 (name만 보내면 email은 사라짐)
+PUT /users/123
+{ "name": "홍길동" }
+
+# PATCH: 부분 수정 (name만 변경, email은 유지)
+PATCH /users/123
+{ "name": "홍길동" }
+```
+
+대부분의 "수정" 기능은 PATCH가 적절합니다.
+
+## 상태 코드를 정확하게
+
+### 자주 쓰는 상태 코드
+
+| 코드 | 의미 | 사용 상황 |
+|------|------|-----------|
+| 200 | OK | 일반적인 성공 |
+| 201 | Created | 리소스 생성 성공 |
+| 204 | No Content | 삭제 성공 (응답 본문 없음) |
+| 400 | Bad Request | 잘못된 요청 (유효성 검증 실패) |
+| 401 | Unauthorized | 인증 필요 |
+| 403 | Forbidden | 권한 없음 |
+| 404 | Not Found | 리소스 없음 |
+| 409 | Conflict | 중복 등 충돌 |
+| 422 | Unprocessable Entity | 문법은 맞지만 처리 불가 |
+| 500 | Internal Server Error | 서버 에러 |
+
+### 흔한 실수
+
+모든 에러를 200으로 응답하고 본문에 에러 정보를 넣는 패턴은 피해야 합니다.
+
+```json
+// 나쁜 예: 상태코드는 200인데 실제로는 에러
+{
+  "success": false,
+  "error": "사용자를 찾을 수 없습니다"
+}
+
+// 좋은 예: 404 상태코드와 함께 에러 정보
+// HTTP 404
+{
+  "error": {
+    "code": "USER_NOT_FOUND",
+    "message": "사용자를 찾을 수 없습니다"
+  }
+}
+```
+
+## 에러 응답 표준화
+
+모든 에러 응답의 형식을 통일하세요.
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "입력값이 올바르지 않습니다",
+    "details": [
+      {
+        "field": "email",
+        "message": "유효한 이메일 주소를 입력하세요"
+      },
+      {
+        "field": "password",
+        "message": "비밀번호는 8자 이상이어야 합니다"
+      }
+    ]
+  }
+}
+```
+
+프론트엔드에서 에러를 파싱하고 사용자에게 보여주기 쉬운 구조가 좋은 구조입니다.
+
+## 페이지네이션
+
+데이터 목록을 반환할 때는 반드시 페이지네이션을 적용해야 합니다.
+
+### 오프셋 기반
+
+```
+GET /posts?page=2&limit=20
+```
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "limit": 20,
+    "totalItems": 156,
+    "totalPages": 8
+  }
+}
+```
+
+구현이 간단하고 페이지 번호로 이동할 수 있지만, 데이터가 많을수록 느려집니다.
+
+### 커서 기반
+
+```
+GET /posts?cursor=eyJpZCI6MTAwfQ&limit=20
+```
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "nextCursor": "eyJpZCI6MTIwfQ",
+    "hasMore": true
+  }
+}
+```
+
+대량 데이터에서 성능이 좋고, 실시간으로 데이터가 추가/삭제되어도 누락이 없습니다. 무한 스크롤 UI에 적합합니다.
+
+## 필터링과 정렬
+
+쿼리 파라미터를 활용합니다.
+
+```
+# 필터링
+GET /posts?category=튜토리얼&published=true
+
+# 정렬
+GET /posts?sort=-createdAt  # 최신순 (- 는 내림차순)
+GET /posts?sort=title       # 제목 오름차순
+
+# 필드 선택 (응답 크기 최소화)
+GET /users?fields=id,name,email
+```
+
+## 버전 관리
+
+API가 변경될 때 기존 클라이언트가 깨지지 않도록 버전 관리가 필요합니다.
+
+```
+# URL에 버전 포함 (가장 흔한 방식)
+GET /v1/users
+GET /v2/users
+
+# 헤더에 버전 포함
+GET /users
+Accept: application/vnd.api+json; version=2
+```
+
+URL 방식이 직관적이고 테스트하기 쉬워서 가장 널리 사용됩니다.
+
+## 인증
+
+### Bearer Token
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+JWT를 사용하는 가장 일반적인 방법입니다. 헤더에 토큰을 포함하여 요청합니다.
+
+### API Key
+
+```
+X-API-Key: your-api-key-here
+```
+
+서버 간 통신이나 외부 서비스 연동에 주로 사용합니다.
+
+중요한 것은 민감한 정보를 쿼리 파라미터에 넣지 않는 것입니다. URL은 서버 로그에 기록되기 때문입니다.
+
+## 마무리
+
+API 설계에 정답은 없지만, 일관성이 가장 중요합니다. 한 프로젝트 안에서 어떤 엔드포인트는 camelCase를 쓰고 다른 곳은 snake_case를 쓰면 사용하는 사람이 혼란스럽습니다. 팀에서 컨벤션을 정하고 문서화하세요. 그리고 그 컨벤션을 지키는 것이 가장 좋은 API 설계의 시작입니다.

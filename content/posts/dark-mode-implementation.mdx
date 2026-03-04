@@ -1,0 +1,190 @@
+---
+title: "웹사이트 다크모드 구현 가이드: CSS부터 시스템 연동까지"
+description: "CSS 변수, JavaScript, 시스템 설정 연동까지 웹사이트에 다크모드를 구현하는 방법을 단계별로 설명합니다."
+date: "2026-02-28"
+category: "튜토리얼"
+tags: ["다크모드", "CSS", "JavaScript", "웹개발"]
+thumbnail: "/images/posts/dark-mode.jpg"
+author: "테크인사이트 운영자"
+published: true
+---
+
+## 다크모드가 필요한 이유
+
+다크모드는 이제 선택이 아닌 필수입니다. 2023년 기준으로 전 세계 사용자의 약 80% 이상이 다크모드를 사용하고 있다는 조사 결과가 있습니다. 눈의 피로를 줄이고, OLED 디스플레이에서는 배터리 절약 효과도 있습니다.
+
+개발자 관점에서도 다크모드 지원은 사용자 경험을 크게 향상시킵니다. 특히 밤에 코딩하거나 글을 읽는 사용자들에게 좋은 인상을 줍니다.
+
+## 1단계: CSS 변수로 테마 정의
+
+다크모드 구현의 핵심은 CSS 변수입니다. 색상을 하드코딩하지 않고 변수로 관리하면, 테마 전환이 간단해집니다.
+
+```css
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+  --accent-color: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #e5e5e5;
+  --text-secondary: #a0a0a0;
+  --border-color: #333333;
+  --accent-color: #60a5fa;
+}
+```
+
+이렇게 정의하면 모든 컴포넌트에서 `var(--bg-primary)` 같은 형태로 사용할 수 있습니다.
+
+## 2단계: HTML에 테마 속성 적용
+
+```css
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+```
+
+`transition` 속성을 추가하면 테마 전환 시 부드러운 애니메이션이 적용됩니다.
+
+## 3단계: JavaScript로 테마 전환
+
+```javascript
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+}
+
+// 페이지 로드 시 저장된 테마 적용
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadTheme);
+```
+
+`localStorage`를 사용해서 사용자가 선택한 테마를 저장합니다. 다음에 방문해도 같은 테마가 유지됩니다.
+
+## 4단계: 시스템 설정 연동
+
+사용자의 OS 다크모드 설정을 감지해서 자동으로 적용할 수 있습니다.
+
+```javascript
+function getSystemTheme() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  const theme = savedTheme || getSystemTheme();
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+// 시스템 테마 변경 감지
+window.matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      const theme = e.matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  });
+```
+
+우선순위는 다음과 같습니다: 사용자가 직접 선택한 테마가 있으면 그것을 사용하고, 없으면 시스템 설정을 따릅니다.
+
+## 5단계: 깜빡임(FOUC) 방지
+
+다크모드에서 가장 흔한 문제는 페이지 로드 시 라이트모드가 잠깐 보이는 현상입니다. 이를 Flash of Unstyled Content(FOUC)라고 합니다.
+
+해결 방법은 `<head>` 태그 안에 인라인 스크립트를 넣는 것입니다.
+
+```html
+<head>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme')
+        || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+```
+
+이 스크립트는 HTML 파싱 중에 즉시 실행되므로, 화면이 그려지기 전에 올바른 테마가 적용됩니다.
+
+## 다크모드 디자인 팁
+
+### 순수 검정(#000000)은 피하세요
+
+순수 검정 배경에 흰색 텍스트는 대비가 너무 강해서 오히려 눈이 피로합니다. `#0f0f0f`이나 `#1a1a1a` 같은 짙은 회색을 사용하는 것이 좋습니다.
+
+### 색상 채도를 낮추세요
+
+라이트모드에서 사용하던 선명한 색상은 다크모드에서 눈에 너무 강하게 보일 수 있습니다. 다크모드에서는 채도를 약간 낮추고 밝기를 조절하세요.
+
+### 그림자 대신 테두리 사용
+
+다크모드에서 `box-shadow`는 거의 보이지 않습니다. 대신 미세한 테두리(`border`)나 배경색 차이로 깊이감을 표현하세요.
+
+### 이미지 처리
+
+밝은 이미지는 다크모드에서 눈이 부실 수 있습니다. CSS 필터로 밝기를 약간 낮추는 방법이 있습니다.
+
+```css
+[data-theme="dark"] img {
+  filter: brightness(0.9);
+}
+```
+
+## React에서의 다크모드
+
+React 프로젝트에서는 Context API를 활용하면 깔끔하게 구현할 수 있습니다.
+
+```jsx
+const ThemeContext = React.createContext();
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = React.useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+```
+
+## 마무리
+
+다크모드 구현은 CSS 변수만 잘 설정하면 나머지는 자연스럽게 따라옵니다. 처음부터 CSS 변수 기반으로 색상을 관리하는 습관을 들이면, 나중에 다크모드를 추가할 때 훨씬 수월합니다. 이미 프로젝트가 진행 중이라면, 점진적으로 하드코딩된 색상을 변수로 전환해 나가세요.

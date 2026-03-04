@@ -131,6 +131,46 @@ const thumbnails = [
     icons: ['TS', '🔒', '📘'],
     pattern: 'lines',
   },
+  {
+    name: 'git-workflow',
+    gradient: ['#f05032', '#6e2c00'],
+    title: 'Git 브랜치 전략',
+    subtitle: '실무 워크플로우 정리',
+    icons: ['🌿', '🔀', '📋'],
+    pattern: 'grid',
+  },
+  {
+    name: 'dark-mode',
+    gradient: ['#1a1a2e', '#16213e'],
+    title: '다크모드 구현',
+    subtitle: 'CSS부터 시스템 연동까지',
+    icons: ['🌙', '🎨', '💻'],
+    pattern: 'waves',
+  },
+  {
+    name: 'productivity-habits',
+    gradient: ['#2d6a4f', '#40916c'],
+    title: '개발자 생산성 습관',
+    subtitle: '시니어가 알려주는 7가지',
+    icons: ['⚡', '📈', '🧠'],
+    pattern: 'dots',
+  },
+  {
+    name: 'api-design',
+    gradient: ['#ff6b35', '#c73e1d'],
+    title: 'REST API 설계',
+    subtitle: '베스트 프랙티스 가이드',
+    icons: ['🔗', '📡', '⚙'],
+    pattern: 'lines',
+  },
+  {
+    name: 'mac-vs-windows',
+    gradient: ['#2c2c2c', '#0078d4'],
+    title: '맥 vs 윈도우',
+    subtitle: '개발자를 위한 현실 비교',
+    icons: ['🍎', '🪟', '⚖'],
+    pattern: 'grid',
+  },
 ];
 
 function generatePattern(type, width, height) {

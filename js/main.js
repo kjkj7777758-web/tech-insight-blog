@@ -135,6 +135,18 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===== Blog Posts Data for Search =====
 var BLOG_POSTS = [
   {
+    title: '2026년 벚꽃배당 완벽 가이드: 봄 배당 시즌 투자 전략',
+    excerpt: 'KB금융, 신한금융, 현대차 등 주요 배당주와 봄 배당 시즌 투자 전략, 배당 재투자 복리 효과까지 총정리합니다.',
+    category: '투자',
+    url: '/posts/cherry-blossom-dividend-2026.html'
+  },
+  {
+    title: '지정학적 리스크와 자산 보호: 경제 위기 시 현명한 대처법',
+    excerpt: '중동 리스크, 환율 급등 등 지정학적 위기 상황에서 개인 자산을 보호하는 전략을 알아봅니다.',
+    category: '경제상식',
+    url: '/posts/geopolitical-risk-asset-protection.html'
+  },
+  {
     title: '2026년 ISA 계좌 완벽 가이드: 절세의 핵심 도구',
     excerpt: 'ISA 계좌의 비과세 혜택, 유형별 차이, 손익통산 활용법과 연금계좌 연계 전략까지 총정리.',
     category: '투자',

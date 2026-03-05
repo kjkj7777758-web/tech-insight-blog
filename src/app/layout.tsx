@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Noto_Sans_KR } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import Header from '@/components/layout/Header';
@@ -58,6 +59,20 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
+        {/* Google Analytics */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-790X2M61FC"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-790X2M61FC');
+          `}
+        </Script>
         <link rel="alternate" type="application/rss+xml" title={SITE_NAME} href="/feed.xml" />
       </head>
       <body className={`${notoSansKR.variable} font-sans antialiased`}>

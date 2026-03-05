@@ -13,6 +13,7 @@ const navLinks = [
   { href: '/category/리뷰', label: '리뷰' },
   { href: '/category/튜토리얼', label: '튜토리얼' },
   { href: '/category/팁', label: '팁' },
+  { href: '/tools', label: '🛠️ 도구' },
   { href: '/about', label: '소개' },
 ];
 

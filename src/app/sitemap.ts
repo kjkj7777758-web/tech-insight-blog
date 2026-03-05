@@ -28,5 +28,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/terms`, priority: 0.2, changeFrequency: 'yearly' as const },
   ].map((page) => ({ ...page, lastModified: new Date() }));
 
-  return [...staticPages, ...categoryUrls, ...postUrls];
+  const toolPages = [
+    { url: `${SITE_URL}/tools`, priority: 0.9, changeFrequency: 'monthly' as const },
+    { url: `${SITE_URL}/tools/json-formatter`, priority: 0.9, changeFrequency: 'monthly' as const },
+    { url: `${SITE_URL}/tools/base64`, priority: 0.9, changeFrequency: 'monthly' as const },
+    { url: `${SITE_URL}/tools/regex-tester`, priority: 0.9, changeFrequency: 'monthly' as const },
+  ].map((page) => ({ ...page, lastModified: new Date() }));
+
+  return [...staticPages, ...toolPages, ...categoryUrls, ...postUrls];
 }

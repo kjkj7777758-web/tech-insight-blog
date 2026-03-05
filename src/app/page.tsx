@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Braces, Binary, Regex } from 'lucide-react';
 import { getAllPosts, getFeaturedPosts } from '@/lib/posts';
 import { SITE_NAME } from '@/lib/constants';
 import PostCard from '@/components/blog/PostCard';
@@ -67,6 +67,58 @@ export default function HomePage() {
           </Link>
         </section>
       )}
+
+      {/* 개발자 도구 섹션 */}
+      <section className="max-w-6xl mx-auto px-4 pt-16 pb-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">🛠️ 개발자 도구</h2>
+          <Link
+            href="/tools"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
+          >
+            전체 보기
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href="/tools/json-formatter"
+            className="group flex items-center gap-4 p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all"
+          >
+            <div className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 text-white shrink-0">
+              <Braces size={22} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">JSON 포맷터</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">JSON 정리, 압축, 검증</p>
+            </div>
+          </Link>
+          <Link
+            href="/tools/base64"
+            className="group flex items-center gap-4 p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-600 transition-all"
+          >
+            <div className="p-2.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white shrink-0">
+              <Binary size={22} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Base64 변환기</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">인코딩, 디코딩, 파일 변환</p>
+            </div>
+          </Link>
+          <Link
+            href="/tools/regex-tester"
+            className="group flex items-center gap-4 p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 hover:shadow-lg hover:border-purple-300 dark:hover:border-purple-600 transition-all"
+          >
+            <div className="p-2.5 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white shrink-0">
+              <Regex size={22} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">정규식 테스터</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">실시간 매칭, 치환, 프리셋</p>
+            </div>
+          </Link>
+        </div>
+      </section>
 
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="flex items-center justify-between mb-8">

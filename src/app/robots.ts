@@ -3,10 +3,21 @@ import { SITE_URL } from '@/lib/constants';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-    },
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/'],
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+      },
+      {
+        userAgent: 'Yeti',
+        allow: '/',
+      },
+    ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

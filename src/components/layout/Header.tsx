@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import SearchBar from '@/components/blog/SearchBar';
 import { SITE_NAME } from '@/lib/constants';
 
 const navLinks = [
@@ -39,6 +40,7 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <SearchBar />
             <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}

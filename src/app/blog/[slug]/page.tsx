@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Clock, Calendar, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/posts';
 import { SITE_URL } from '@/lib/constants';
 import CategoryBadge from '@/components/blog/CategoryBadge';
@@ -13,6 +14,7 @@ import PostCard from '@/components/blog/PostCard';
 import AffiliateDisclosure from '@/components/affiliate/AffiliateDisclosure';
 import CoupangProductCard from '@/components/affiliate/CoupangProductCard';
 import { ArticleJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd';
+import TableOfContents from '@/components/blog/TableOfContents';
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
@@ -122,9 +124,26 @@ export default async function BlogPostPage({
 
         {hasAffiliateProducts && <AffiliateDisclosure />}
 
+        {/* Table of Contents */}
+        <TableOfContents content={post.content} />
+
         {/* Content */}
         <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-primary-600 dark:prose-a:text-primary-400">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h2: ({ children }) => {
+                const text = String(children).replace(/\*\*/g, '').replace(/`/g, '').trim();
+                const id = text.toLowerCase().replace(/[^\wㄱ-ㅎ가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                return <h2 id={id}>{children}</h2>;
+              },
+              h3: ({ children }) => {
+                const text = String(children).replace(/\*\*/g, '').replace(/`/g, '').trim();
+                const id = text.toLowerCase().replace(/[^\wㄱ-ㅎ가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                return <h3 id={id}>{children}</h3>;
+              },
+            }}
+          >{post.content}</ReactMarkdown>
         </div>
 
         {/* Affiliate Products */}

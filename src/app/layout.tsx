@@ -37,6 +37,17 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    types: {
+      'application/rss+xml': `${SITE_URL}/feed.xml`,
+    },
+  },
+  verification: {
+    google: '',
+    other: {
+      'naver-site-verification': '',
+    },
+  },
 };
 
 export default function RootLayout({
@@ -46,6 +57,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
+      <head>
+        <link rel="alternate" type="application/rss+xml" title={SITE_NAME} href="/feed.xml" />
+      </head>
       <body className={`${notoSansKR.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="min-h-screen flex flex-col">

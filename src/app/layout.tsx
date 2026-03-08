@@ -59,9 +59,11 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
+        <link rel="alternate" type="application/rss+xml" title={SITE_NAME} href="/feed.xml" />
+      </head>
+      <body className={`${notoSansKR.variable} font-sans antialiased`}>
         {/* Google Analytics */}
         <Script
-          async
           src="https://www.googletagmanager.com/gtag/js?id=G-790X2M61FC"
           strategy="afterInteractive"
         />
@@ -73,9 +75,6 @@ export default function RootLayout({
             gtag('config', 'G-790X2M61FC');
           `}
         </Script>
-        <link rel="alternate" type="application/rss+xml" title={SITE_NAME} href="/feed.xml" />
-      </head>
-      <body className={`${notoSansKR.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="min-h-screen flex flex-col">
             <Header />

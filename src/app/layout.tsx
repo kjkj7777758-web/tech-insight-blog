@@ -75,6 +75,13 @@ export default function RootLayout({
             gtag('config', 'G-790X2M61FC');
           `}
         </Script>
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3774274080171066"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="min-h-screen flex flex-col">
             <Header />

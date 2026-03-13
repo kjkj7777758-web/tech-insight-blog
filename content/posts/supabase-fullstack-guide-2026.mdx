@@ -1,0 +1,439 @@
+---
+title: "Supabase 풀스택 가이드 2026 - Firebase 대안으로 떠오른 오픈소스 BaaS"
+description: "Firebase의 강력한 대안 Supabase로 풀스택 앱을 만드는 방법. 인증, 데이터베이스, 스토리지, 실시간 구독까지 Next.js와 함께 실전 프로젝트를 구축합니다."
+date: "2026-03-12"
+category: "튜토리얼"
+tags: ["Supabase", "Firebase", "BaaS", "PostgreSQL", "Next.js", "풀스택", "백엔드"]
+thumbnail: "/images/posts/supabase-guide.jpg"
+author: "테크인사이트 운영자"
+published: true
+featured: true
+---
+
+## Supabase란?
+
+**Supabase**는 Firebase의 오픈소스 대안으로, PostgreSQL 기반의 백엔드 서비스(BaaS)입니다. 2026년 현재 GitHub Stars 75,000+를 기록하며 가장 빠르게 성장하는 개발자 도구 중 하나입니다.
+
+Firebase가 NoSQL(Firestore) 기반인 반면, Supabase는 **관계형 데이터베이스(PostgreSQL)**를 사용합니다. SQL에 익숙한 개발자라면 훨씬 친숙하게 사용할 수 있습니다.
+
+**Supabase가 제공하는 것:**
+- PostgreSQL 데이터베이스
+- 인증(Authentication)
+- 파일 스토리지
+- 실시간 구독(Realtime)
+- Edge Functions (서버리스 함수)
+- AI/벡터 검색 (pgvector)
+
+---
+
+## Firebase vs Supabase 비교
+
+| 비교 항목 | Firebase | Supabase |
+|----------|----------|----------|
+| **데이터베이스** | Firestore (NoSQL) | PostgreSQL (SQL) |
+| **오픈소스** | ❌ | ✅ |
+| **셀프 호스팅** | ❌ | ✅ (Docker) |
+| **인증** | Firebase Auth | GoTrue 기반 |
+| **실시간** | Firestore Listener | PostgreSQL LISTEN/NOTIFY |
+| **스토리지** | Cloud Storage | S3 호환 스토리지 |
+| **서버리스** | Cloud Functions | Edge Functions (Deno) |
+| **가격** | 종량제 | 무료 플랜 넉넉 |
+| **벤더 락인** | 높음 | 낮음 (표준 PostgreSQL) |
+| **관계 쿼리** | 복잡 (subcollection) | 간단 (SQL JOIN) |
+
+**Supabase를 선택해야 하는 경우:**
+- SQL과 관계형 데이터에 익숙한 경우
+- 벤더 락인을 피하고 싶은 경우
+- 셀프 호스팅이 필요한 경우
+- 복잡한 쿼리와 JOIN이 필요한 경우
+
+---
+
+## 프로젝트 시작하기
+
+### 1. Supabase 프로젝트 생성
+
+Supabase 대시보드에서 새 프로젝트를 생성합니다.
+
+1. supabase.com 가입 및 로그인
+2. "New Project" 클릭
+3. 프로젝트 이름, 데이터베이스 비밀번호, 리전 설정
+4. 리전은 **Northeast Asia (Seoul)** 선택 (한국 서비스 기준)
+
+### 2. Next.js 프로젝트 설정
+
+```bash
+npx create-next-app@latest my-app --typescript --tailwind --app
+cd my-app
+npm install @supabase/supabase-js @supabase/ssr
+```
+
+### 3. 환경 변수 설정
+
+```env
+# .env.local
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+프로젝트 URL과 anon key는 Supabase 대시보드 > Settings > API에서 확인할 수 있습니다.
+
+### 4. Supabase 클라이언트 생성
+
+```typescript
+// src/lib/supabase/client.ts
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+```typescript
+// src/lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+}
+```
+
+---
+
+## 핵심 기능 가이드
+
+### 1. 데이터베이스 (CRUD)
+
+Supabase는 JavaScript 클라이언트로 SQL 없이도 데이터를 다룰 수 있습니다.
+
+**테이블 생성 (SQL Editor):**
+```sql
+CREATE TABLE posts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT,
+  author_id UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  published BOOLEAN DEFAULT false
+);
+
+-- Row Level Security 활성화
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+```
+
+**데이터 조회:**
+```typescript
+// 전체 조회
+const { data: posts, error } = await supabase
+  .from('posts')
+  .select('*')
+  .eq('published', true)
+  .order('created_at', { ascending: false })
+  .limit(10)
+
+// 관계 데이터 조회 (JOIN)
+const { data } = await supabase
+  .from('posts')
+  .select(`
+    *,
+    author:profiles(name, avatar_url),
+    comments(id, content, created_at)
+  `)
+  .eq('id', postId)
+  .single()
+```
+
+**데이터 삽입:**
+```typescript
+const { data, error } = await supabase
+  .from('posts')
+  .insert({
+    title: '새 글 제목',
+    content: '글 내용입니다.',
+    author_id: user.id
+  })
+  .select()
+  .single()
+```
+
+**데이터 수정:**
+```typescript
+const { data, error } = await supabase
+  .from('posts')
+  .update({ title: '수정된 제목' })
+  .eq('id', postId)
+  .select()
+  .single()
+```
+
+**데이터 삭제:**
+```typescript
+const { error } = await supabase
+  .from('posts')
+  .delete()
+  .eq('id', postId)
+```
+
+### 2. 인증 (Authentication)
+
+Supabase Auth는 이메일, 소셜 로그인, 매직 링크 등을 지원합니다.
+
+**이메일 회원가입:**
+```typescript
+const { data, error } = await supabase.auth.signUp({
+  email: 'user@example.com',
+  password: 'securepassword123',
+  options: {
+    data: {
+      name: '홍길동',
+    }
+  }
+})
+```
+
+**이메일 로그인:**
+```typescript
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: 'user@example.com',
+  password: 'securepassword123'
+})
+```
+
+**소셜 로그인 (Google):**
+```typescript
+const { data, error } = await supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: {
+    redirectTo: `${window.location.origin}/auth/callback`
+  }
+})
+```
+
+**현재 사용자 확인:**
+```typescript
+const { data: { user } } = await supabase.auth.getUser()
+```
+
+**로그아웃:**
+```typescript
+await supabase.auth.signOut()
+```
+
+### 3. Row Level Security (RLS)
+
+RLS는 Supabase의 **핵심 보안 기능**입니다. 데이터베이스 수준에서 접근 제어를 설정합니다.
+
+```sql
+-- 누구나 공개 글을 읽을 수 있음
+CREATE POLICY "공개 글 읽기" ON posts
+  FOR SELECT
+  USING (published = true);
+
+-- 본인 글만 수정 가능
+CREATE POLICY "본인 글 수정" ON posts
+  FOR UPDATE
+  USING (auth.uid() = author_id);
+
+-- 로그인한 사용자만 글 작성 가능
+CREATE POLICY "글 작성" ON posts
+  FOR INSERT
+  WITH CHECK (auth.uid() = author_id);
+
+-- 본인 글만 삭제 가능
+CREATE POLICY "본인 글 삭제" ON posts
+  FOR DELETE
+  USING (auth.uid() = author_id);
+```
+
+> ⚠️ **중요:** RLS를 활성화하지 않으면 anon key로 **모든 데이터에 접근 가능**합니다. 프로덕션에서는 반드시 RLS를 설정하세요.
+
+### 4. 파일 스토리지
+
+이미지, 문서 등 파일을 업로드하고 관리합니다.
+
+**버킷 생성 (대시보드 또는 SQL):**
+```sql
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true);
+```
+
+**파일 업로드:**
+```typescript
+const { data, error } = await supabase.storage
+  .from('avatars')
+  .upload(`${userId}/profile.jpg`, file, {
+    cacheControl: '3600',
+    upsert: true
+  })
+```
+
+**파일 URL 가져오기:**
+```typescript
+const { data } = supabase.storage
+  .from('avatars')
+  .getPublicUrl(`${userId}/profile.jpg`)
+
+// data.publicUrl → 이미지 URL
+```
+
+### 5. 실시간 구독 (Realtime)
+
+데이터 변경 시 실시간으로 알림을 받을 수 있습니다.
+
+```typescript
+// 새 댓글이 추가될 때마다 실시간으로 수신
+const channel = supabase
+  .channel('comments')
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'comments',
+      filter: `post_id=eq.${postId}`
+    },
+    (payload) => {
+      console.log('새 댓글:', payload.new)
+      setComments(prev => [...prev, payload.new])
+    }
+  )
+  .subscribe()
+
+// 구독 해제
+return () => {
+  supabase.removeChannel(channel)
+}
+```
+
+---
+
+## 실전 프로젝트: 간단한 게시판
+
+위의 기능들을 조합한 간단한 게시판 예시입니다.
+
+### 데이터베이스 스키마
+
+```sql
+-- 사용자 프로필
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 게시글
+CREATE TABLE posts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author_id UUID REFERENCES profiles(id) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS 설정
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "프로필 공개 읽기" ON profiles FOR SELECT USING (true);
+CREATE POLICY "본인 프로필 수정" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "게시글 공개 읽기" ON posts FOR SELECT USING (true);
+CREATE POLICY "로그인 사용자 글 작성" ON posts FOR INSERT WITH CHECK (auth.uid() = author_id);
+CREATE POLICY "본인 글 수정" ON posts FOR UPDATE USING (auth.uid() = author_id);
+CREATE POLICY "본인 글 삭제" ON posts FOR DELETE USING (auth.uid() = author_id);
+```
+
+### 게시글 목록 (Server Component)
+
+```typescript
+// src/app/posts/page.tsx
+import { createClient } from '@/lib/supabase/server'
+
+export default async function PostsPage() {
+  const supabase = await createClient()
+
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('*, author:profiles(name, avatar_url)')
+    .order('created_at', { ascending: false })
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">게시판</h1>
+      {posts?.map((post) => (
+        <article key={post.id} className="border-b py-4">
+          <h2 className="text-lg font-semibold">{post.title}</h2>
+          <p className="text-gray-600 mt-1 line-clamp-2">{post.content}</p>
+          <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
+            <span>{post.author?.name}</span>
+            <span>·</span>
+            <time>{new Date(post.created_at).toLocaleDateString('ko-KR')}</time>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+```
+
+---
+
+## 무료 플랜 한도
+
+| 항목 | 무료 플랜 | Pro ($25/월) |
+|------|----------|-------------|
+| 데이터베이스 | 500MB | 8GB |
+| 스토리지 | 1GB | 100GB |
+| 대역폭 | 5GB | 250GB |
+| Edge Functions | 50만 호출/월 | 200만 호출/월 |
+| 동시 실시간 연결 | 200 | 500 |
+| 프로젝트 수 | 2개 | 무제한 |
+
+개인 프로젝트나 MVP 단계에서는 **무료 플랜으로 충분**합니다.
+
+---
+
+## 자주 묻는 질문 (FAQ)
+
+### Q. Supabase는 프로덕션에서 사용해도 안전한가요?
+**네.** 2026년 현재 수많은 기업이 프로덕션에서 Supabase를 사용하고 있습니다. SOC2 Type II 인증을 보유하고 있으며, 데이터는 AWS 인프라에서 관리됩니다.
+
+### Q. PostgreSQL을 잘 몰라도 사용할 수 있나요?
+**네.** JavaScript 클라이언트로 SQL 없이도 CRUD 작업이 가능합니다. 하지만 RLS 정책이나 복잡한 쿼리를 위해 기본 SQL은 알아두는 것이 좋습니다.
+
+### Q. Firebase에서 Supabase로 마이그레이션할 수 있나요?
+**가능합니다.** Firestore 데이터를 JSON으로 내보내서 PostgreSQL로 가져올 수 있고, Firebase Auth 사용자도 마이그레이션 도구를 통해 이전할 수 있습니다.
+
+### Q. 셀프 호스팅은 어떻게 하나요?
+Docker Compose를 사용하여 자체 서버에 Supabase 전체를 설치할 수 있습니다. 공식 문서에 상세한 가이드가 제공됩니다.
+
+---
+
+## 마무리
+
+Supabase는 **PostgreSQL의 안정성**과 **Firebase의 편의성**을 결합한 강력한 BaaS입니다. 오픈소스이기 때문에 벤더 락인 걱정 없이 사용할 수 있고, SQL 기반이라 복잡한 데이터 관계도 자연스럽게 처리할 수 있습니다.
+
+풀스택 개발을 시작하거나 Firebase 대안을 찾고 있다면, Supabase를 적극 추천합니다. 무료 플랜으로 시작해서 프로젝트를 만들어보세요.
